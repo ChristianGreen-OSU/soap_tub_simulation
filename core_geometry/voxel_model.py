@@ -1,0 +1,88 @@
+# voxel_model.py
+
+"""
+This module defines the voxel-based geometry representation of the soap bar.
+It will be used throughout the simulation to hold the 3D grid data structure
+representing the soap, where each voxel can represent soap presence (binary)
+or local soap density (float).
+
+Plans:
+- Represent the soap bar as a 3D numpy array.
+- Allow initialization of standard shapes (cube, cylinder, ellipsoid).
+- Provide helper functions to:
+    - Access surface voxels (for erosion algorithms).
+    - Compute total mass and surface area.
+    - Optionally assign material properties per voxel.
+- This abstraction will be updated in-place by the erosion engine.
+- Later, this can be extended to load real 3D mesh data or support unstructured grids.
+
+Nuclear Engineering Parallel:
+This mimics how reactor geometry is spatially discretized into lattices or
+meshes in codes like OpenMC or Serpent. Each voxel here is like a fuel pin or
+cell in a core simulator.
+"""
+
+import numpy as np
+
+class VoxelModel:
+    def __init__(self, shape=(30, 30, 10), voxel_resolution=1.0):
+        """
+        Initialize the voxel grid.
+        :param shape: Tuple of (nx, ny, nz) dimensions.
+        :param voxel_resolution: Physical size of each voxel in mm or cm.
+        """
+        self.shape = shape
+        self.res = voxel_resolution
+        self.grid = np.ones(shape, dtype=np.float32)  # 1.0 represents full soap
+
+    def get_mass(self, density=1.0):
+        """
+        Compute total mass of the soap bar.
+        :param density: Mass per voxel unit.
+        :return: Total mass.
+        """
+        return np.sum(self.grid) * density * (self.res ** 3)
+
+    def get_surface_voxels(self):
+        """
+        Identify voxels on the surface of the soap block.
+        Surface is defined as any voxel with a 6-neighbor that is empty (0).
+        :return: List of index tuples of surface voxels.
+        """
+        from scipy.ndimage import binary_erosion
+        mask = self.grid > 0.0
+        eroded = binary_erosion(mask)
+        surface = mask & ~eroded
+        return np.argwhere(surface)
+
+    def erode_voxels(self, indices, rate):
+        """
+        Erode a list of voxels by a given rate.
+        :param indices: List or array of voxel index tuples.
+        :param rate: Float erosion amount to subtract.
+        """
+        for idx in indices:
+            self.grid[tuple(idx)] = max(0.0, self.grid[tuple(idx)] - rate)
+
+    def reset(self):
+        """
+        Reset the soap bar to a full (uneaten) state.
+        """
+        self.grid[:] = 1.0
+
+    def summary(self):
+        """
+        Print summary stats: current mass, nonzero voxels, etc.
+        """
+        mass = self.get_mass()
+        active_voxels = np.count_nonzero(self.grid > 0.0)
+        print(f"Soap mass: {mass:.2f}, active voxels: {active_voxels}")
+
+# Example usage:
+if __name__ == "__main__":
+    vm = VoxelModel((10, 10, 10))
+    print("Initial mass:", vm.get_mass())
+    surf = vm.get_surface_voxels()
+    print(f"Surface voxels: {len(surf)}")
+    vm.erode_voxels(surf[:10], rate=0.1)
+    print("Mass after erosion:", vm.get_mass())
