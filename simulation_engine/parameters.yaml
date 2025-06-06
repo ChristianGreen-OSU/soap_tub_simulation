@@ -1,5 +1,3 @@
-# parameters.yaml
-
 # This file defines the configurable inputs for the soap erosion simulation.
 # Users can edit this file to change the simulation setup, including:
 # - Soap bar size
