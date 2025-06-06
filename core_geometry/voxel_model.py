@@ -1,4 +1,4 @@
-# voxel_model.py
+from shape_generator import make_cuboid, make_ellipsoid, make_cylinder, make_rounded_cuboid
 
 """
 This module defines the voxel-based geometry representation of the soap bar.
@@ -25,15 +25,26 @@ cell in a core simulator.
 import numpy as np
 
 class VoxelModel:
-    def __init__(self, shape=(30, 30, 10), voxel_resolution=1.0):
+    def __init__(self, size=(30, 30, 10), voxel_resolution=1.0, geometry='cuboid'):
         """
         Initialize the voxel grid.
-        :param shape: Tuple of (nx, ny, nz) dimensions.
+        :param size: Tuple of (nx, ny, nz) dimensions.
         :param voxel_resolution: Physical size of each voxel in mm or cm.
+        :param geometry: Form of soap bar.
         """
-        self.shape = shape
+        self.size = size
         self.res = voxel_resolution
-        self.grid = np.ones(shape, dtype=np.float32)  # 1.0 represents full soap
+
+        if geometry == 'cuboid':
+            self.grid = make_cuboid(size)
+        elif geometry == 'ellipsoid':
+            self.grid = make_ellipsoid(size)
+        elif geometry == 'cylinder':
+            self.grid = make_cylinder(size)
+        elif geometry == 'rounded_cuboid':
+            self.grid = make_rounded_cuboid(size, exponent=6)
+        else:
+            raise ValueError(f"Unsupported geometry: {geometry}")
 
     def get_mass(self, density=1.0):
         """

@@ -1,0 +1,31 @@
+# parameters.yaml
+
+# This file defines the configurable inputs for the soap erosion simulation.
+# Users can edit this file to change the simulation setup, including:
+# - Soap bar size
+# - Voxel resolution (mm or cm)
+# - Time step count
+# - Erosion model parameters (deterministic or stochastic)
+
+# Nuclear Engineering Parallel:
+# This is analogous to XML or YAML input decks used in OpenMC, Serpent,
+# or thermal-hydraulic solvers. It separates model logic from configuration.
+
+soap:
+  size: [30, 30, 10]        # Dimensions in voxels
+  voxel_resolution: 1.0     # mm per voxel
+
+simulation:
+  steps: 100
+  log_interval: 10
+
+erosion_model:
+  type: deterministic       # Options: deterministic, stochastic
+  flow_vector: [0, 0, -1]   # Only for deterministic
+  erosion_rate: 0.01        # mm^3 per step per exposed voxel
+
+  # For stochastic model:
+  erosion_mean: 0.01
+  erosion_std: 0.005
+  erosion_fraction: 0.2
+  seed: 42
