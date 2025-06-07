@@ -1,7 +1,3 @@
-from shape_generator import make_cuboid, make_ellipsoid, make_cylinder, make_rounded_cuboid
-import numpy as np
-from typing import Tuple, List, Union
-
 """
 This module defines the voxel-based geometry representation of the soap bar.
 It will be used throughout the simulation to hold the 3D grid data structure
@@ -24,6 +20,9 @@ meshes in codes like OpenMC or Serpent. Each voxel here is like a fuel pin or
 cell in a core simulator.
 """
 
+from typing import Tuple, List, Union
+import numpy as np
+from shape_generator import make_cuboid, make_ellipsoid, make_cylinder, make_rounded_cuboid
 
 class VoxelModel:
     def __init__(self, size: Tuple[int, int, int] = (30, 30, 10), voxel_resolution: float = 1.0, geometry: str = 'cuboid') -> None:
