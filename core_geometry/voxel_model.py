@@ -1,4 +1,6 @@
 from shape_generator import make_cuboid, make_ellipsoid, make_cylinder, make_rounded_cuboid
+import numpy as np
+from typing import Tuple, List, Union
 
 """
 This module defines the voxel-based geometry representation of the soap bar.
@@ -22,18 +24,17 @@ meshes in codes like OpenMC or Serpent. Each voxel here is like a fuel pin or
 cell in a core simulator.
 """
 
-import numpy as np
 
 class VoxelModel:
-    def __init__(self, size=(30, 30, 10), voxel_resolution=1.0, geometry='cuboid'):
+    def __init__(self, size: Tuple[int, int, int] = (30, 30, 10), voxel_resolution: float = 1.0, geometry: str = 'cuboid') -> None:
         """
         Initialize the voxel grid.
         :param size: Tuple of (nx, ny, nz) dimensions.
         :param voxel_resolution: Physical size of each voxel in mm or cm.
         :param geometry: Form of soap bar.
         """
-        self.size = size
-        self.res = voxel_resolution
+        self.size: Tuple[int, int, int] = size
+        self.res: float = voxel_resolution
 
         if geometry == 'cuboid':
             self.grid = make_cuboid(size)
@@ -46,19 +47,19 @@ class VoxelModel:
         else:
             raise ValueError(f"Unsupported geometry: {geometry}")
 
-    def get_mass(self, density=1.0):
+    def get_mass(self, density: float = 1.0) -> float:
         """
         Compute total mass of the soap bar.
         :param density: Mass per voxel unit.
         :return: Total mass.
         """
-        return np.sum(self.grid) * density * (self.res ** 3)
+        return float(np.sum(self.grid) * density * (self.res ** 3))
 
-    def get_surface_voxels(self):
+    def get_surface_voxels(self) -> np.ndarray:
         """
         Identify voxels on the surface of the soap block.
         Surface is defined as any voxel with a 6-neighbor that is empty (0).
-        :return: List of index tuples of surface voxels.
+        :return: Array of index tuples of surface voxels.
         """
         from scipy.ndimage import binary_erosion
         mask = self.grid > 0.0
@@ -66,7 +67,7 @@ class VoxelModel:
         surface = mask & ~eroded
         return np.argwhere(surface)
 
-    def erode_voxels(self, indices, rate):
+    def erode_voxels(self, indices: Union[List[Tuple[int, int, int]], np.ndarray], rate: float) -> None:
         """
         Erode a list of voxels by a given rate.
         :param indices: List or array of voxel index tuples.
@@ -75,13 +76,13 @@ class VoxelModel:
         for idx in indices:
             self.grid[tuple(idx)] = max(0.0, self.grid[tuple(idx)] - rate)
 
-    def reset(self):
+    def reset(self) -> None:
         """
         Reset the soap bar to a full (uneaten) state.
         """
         self.grid[:] = 1.0
 
-    def summary(self):
+    def summary(self) -> None:
         """
         Print summary stats: current mass, nonzero voxels, etc.
         """
