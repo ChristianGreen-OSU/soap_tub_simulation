@@ -1,41 +1,52 @@
 """
 Main script to initialize and run the soap erosion simulation.
 
-Plans:
-- Parse YAML config file.
-- Instantiate voxel model and erosion engine.
-- Run time integrator.
-- Plot or export mass loss and voxel grid visualization.
-- Optionally animate or analyze erosion maps from voxel snapshots.
+Responsibilities:
+- Load and parse configuration from YAML.
+- Construct the voxel-based soap geometry.
+- Select and initialize the erosion model (deterministic or stochastic).
+- Evolve the simulation over time using the TimeIntegrator.
+- Visualize flow vector alignment and erosion process.
+- Output final erosion metrics and visualizations.
 
 Nuclear Engineering Parallel:
-This is akin to a primary driver in simulation software (e.g., OpenMC input processor),
-responsible for wiring together physics modules and execution.
+This script functions as a high-level simulation driver, analogous to
+the input deck processor or solver harness in core simulators like OpenMC,
+RELAP5, or MOOSE-based applications.
 """
 
 import yaml
 import pprint
 import numpy as np
 import pyvista as pv
+
+# Core simulation components
 from core_geometry.voxel_model import VoxelModel
 from physics_models.deterministic_erosion import DeterministicErosionModel
 from physics_models.stochastic_erosion import StochasticErosionModel
 from simulation_engine.time_integrator import TimeIntegrator
+
+# Visualization utilities
 from visualization.render_voxel import render_voxel_grid
 from visualization.animate import animate_voxel_series, make_label
 from visualization.flow_vector import visualize_flow_debug_scene
+
+# Analysis utilities
 from analysis_tools.mass_tracker import MassTracker
+from analysis_tools.erosion_map import compute_erosion_map, plot_erosion_heatmap
 
 def load_config(path="parameters.yaml"):
+    """Load simulation parameters from YAML file."""
     with open(path, 'r') as f:
         return yaml.safe_load(f)
 
 def main():
     cfg = load_config()
 
-    # Print config summary
+    # Echo simulation setup
     print("\n[Simulation Configuration Loaded]")
     pprint.pprint(cfg)
+
     print("\nParsed Inputs Summary:")
     print(f" - Soap size (voxels): {cfg['soap']['size']}")
     print(f" - Geometry shape: {cfg['soap'].get('geometry', 'cuboid')}")
@@ -52,12 +63,12 @@ def main():
     print(f" - Log interval: {cfg['simulation']['log_interval']}")
     print("--------------------------------------\n")
 
-    # Geometry setup
+    # Initialize geometry (voxelized soap bar)
     size = tuple(cfg['soap']['size'])
     res = cfg['soap']['voxel_resolution']
     vm = VoxelModel(size=size, voxel_resolution=res, geometry=cfg['soap'].get('geometry', 'cuboid'))
 
-    # Select erosion model
+    # Initialize erosion model based on type
     em_cfg = cfg['erosion_model']
     if em_cfg['type'] == 'deterministic':
         eroder = DeterministicErosionModel(
@@ -74,16 +85,18 @@ def main():
         )
     else:
         raise ValueError("Unsupported erosion model type.")
-    
-    visualize_flow_debug_scene(vm, flow_vector=em_cfg['flow_vector'], water_source_height=em_cfg['water_source_height'])
 
-    # Run simulation
+    # Visualize initial flow direction and voxel structure for debugging
+    if cfg['simulation']['debug_vectors']: 
+        visualize_flow_debug_scene(vm, flow_vector=em_cfg['flow_vector'], water_source_height=em_cfg['water_source_height'])
+
+    # Run the simulation for configured number of steps
     steps = cfg['simulation']['steps']
     log_int = cfg['simulation']['log_interval']
     sim = TimeIntegrator(vm, eroder, steps=steps)
     sim.run(log_interval=log_int, save_snapshots=True, water_source_height=em_cfg['water_source_height'])
 
-    # Analyze results
+    # Analyze and report final results
     tracker = MassTracker(sim.mass_history)
     summary = tracker.compute_summary()
     if summary is None:
@@ -96,17 +109,20 @@ def main():
     print("Min value:", np.min(vm.grid))
     print("Max value:", np.max(vm.grid))
 
+    # Plot mass loss curve
     tracker.plot()
+
+    # Render final voxel state
     render_voxel_grid(vm.grid)
 
-    # Generate animation from snapshots
+    # Generate animated GIF of voxel snapshots over time
     snapshots = sim.get_snapshots()
     animate_voxel_series(snapshots, label=make_label(cfg))
 
-    # Show final erosion map (delta from start to end)
-    # erosion_map = compute_erosion_map(snapshots[0], snapshots[-1])
-    # plot_erosion_heatmap(erosion_map, threshold=0.01)
-
+    # Optional: heatmap of erosion change
+    if(cfg['simulation']['heat_map']):
+        erosion_map = compute_erosion_map(snapshots[0], snapshots[-1])
+        plot_erosion_heatmap(erosion_map, threshold=0.01)
 
 if __name__ == '__main__':
     main()
