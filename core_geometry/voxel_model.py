@@ -22,7 +22,7 @@ cell in a core simulator.
 
 from typing import Tuple, List, Union
 import numpy as np
-from shape_generator import make_cuboid, make_ellipsoid, make_cylinder, make_rounded_cuboid
+from .shape_generator import make_cuboid, make_ellipsoid, make_cylinder, make_rounded_cuboid
 
 class VoxelModel:
     def __init__(self, size: Tuple[int, int, int] = (30, 30, 10), voxel_resolution: float = 1.0, geometry: str = 'cuboid') -> None:
@@ -54,17 +54,36 @@ class VoxelModel:
         """
         return float(np.sum(self.grid) * density * (self.res ** 3))
 
-    def get_surface_voxels(self) -> np.ndarray:
+    def get_exposed_surface_voxels(self, flow_vector: Tuple[int, int, int]) -> np.ndarray:
         """
-        Identify voxels on the surface of the soap block.
-        Surface is defined as any voxel with a 6-neighbor that is empty (0).
-        :return: Array of index tuples of surface voxels.
+        Return surface voxels exposed to the incoming flow.
+        Only those whose upstream neighbor in the flow direction is empty.
+        :param flow_vector: Tuple of direction of water flow (e.g., (0, 0, -1))
         """
-        from scipy.ndimage import binary_erosion
+        direction = np.array(flow_vector, dtype=int)
         mask = self.grid > 0.0
-        eroded = binary_erosion(mask)
-        surface = mask & ~eroded
-        return np.argwhere(surface)
+        exposed_voxels = []
+
+        nx, ny, nz = self.grid.shape
+        for x in range(nx):
+            for y in range(ny):
+                for z in range(nz):
+                    if not mask[x, y, z]:
+                        continue
+
+                    neighbor = np.array([x, y, z]) + direction
+                    if (
+                        0 <= neighbor[0] < nx and
+                        0 <= neighbor[1] < ny and
+                        0 <= neighbor[2] < nz
+                    ):
+                        if self.grid[tuple(neighbor)] <= 0.0:
+                            exposed_voxels.append((x, y, z))
+                    else:
+                        # Edge of grid = exposed to outside
+                        exposed_voxels.append((x, y, z))
+
+        return np.array(exposed_voxels)
 
     def erode_voxels(self, indices: Union[List[Tuple[int, int, int]], np.ndarray], rate: float) -> None:
         """
@@ -73,7 +92,8 @@ class VoxelModel:
         :param rate: Float erosion amount to subtract.
         """
         for idx in indices:
-            self.grid[tuple(idx)] = max(0.0, self.grid[tuple(idx)] - rate)
+            new_value = self.grid[tuple(idx)] - rate
+            self.grid[tuple(idx)] = 0.0 if new_value < 1e-4 else new_value
 
     def reset(self) -> None:
         """
