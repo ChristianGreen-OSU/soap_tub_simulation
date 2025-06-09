@@ -24,6 +24,13 @@ def compute_exposures(surface_voxels, center_point, normalized_flow_vector):
             dot = max(0.0, dot)  # Only consider surfaces facing toward the flow
         exposure.append(dot)
 
+    # untested vectorization with numpy
+    # directions = surface_voxels - center_point  # shape (N, 3)
+    # norms = np.linalg.norm(directions, axis=1, keepdims=True)
+    # normals = np.divide(directions, norms, out=np.zeros_like(directions), where=(norms != 0))
+    # dot_products = np.einsum('ij,j->i', normals, normalized_flow_vector)
+    # exposure = np.clip(dot_products, 0.0, None)
+    
     return np.array(exposure)
 
 def compute_center(voxel_model: VoxelModel, normalized_flow_vector, water_source_height=0.0):
