@@ -24,6 +24,8 @@ class MassTracker:
         self.history = np.array(mass_history)
 
     def compute_summary(self):
+        if (self.history is None) or (len(self.history) == 0):
+            return None
         initial = self.history[0]
         final = self.history[-1]
         total_loss = initial - final

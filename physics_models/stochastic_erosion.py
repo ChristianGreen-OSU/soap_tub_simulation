@@ -52,7 +52,8 @@ class StochasticErosionModel:
         if total == 0:
             return  # No erosion if no voxel is facing the source
 
-        probabilities = exposures / total
+        exposures += 1e-6  # Tiny background exposure
+        probabilities = exposures / exposures.sum()
         k = int(len(surface_voxels) * self.fraction)
 
         sampled_indices = self.rng.choice(len(surface_voxels), size=k, replace=False, p=probabilities)
