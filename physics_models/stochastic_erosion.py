@@ -16,7 +16,7 @@ Unlike deterministic field-based erosion, this reflects randomness in local flux
 
 import numpy as np
 from core_geometry.voxel_model import VoxelModel
-from physics_models.vector_utils import compute_exposures
+from physics_models.vector_utils import compute_exposures, compute_center, normalize_vector
 
 class StochasticErosionModel:
     def __init__(self, erosion_mean=0.01, erosion_std=0.005, erosion_fraction=0.2, seed=None, flow_vector=(0, 0, -1)):
@@ -32,7 +32,7 @@ class StochasticErosionModel:
         self.std = erosion_std
         self.fraction = erosion_fraction
         self.rng = np.random.default_rng(seed)
-        self.flow_vector = np.array(flow_vector) / np.linalg.norm(flow_vector)
+        self.normalized_flow_vector = normalize_vector(flow_vector)
 
     def apply(self, voxel_model: VoxelModel, water_source_height=1.0):
         """
@@ -40,15 +40,13 @@ class StochasticErosionModel:
         :param voxel_model: Instance of VoxelModel.
         :param water_source_height: Controls source position for directional bias.
         """
-        surface_voxels = voxel_model.get_exposed_surface_voxels(self.flow_vector)
+        surface_voxels = voxel_model.get_exposed_surface_voxels(self.normalized_flow_vector)
         if len(surface_voxels) == 0:
             return
 
-        # Match the deterministic logic for directional bias
-        center = np.array(voxel_model.size, dtype=float) / 2.0
-        center[2] = voxel_model.size[2] + water_source_height  # Push water origin above the soap
+        center = compute_center(voxel_model, self.normalized_flow_vector, water_source_height)
 
-        exposures = compute_exposures(surface_voxels, center, self.flow_vector)
+        exposures = compute_exposures(surface_voxels, center, self.normalized_flow_vector)
         exposures = np.array(exposures)
         total = exposures.sum()
         if total == 0:

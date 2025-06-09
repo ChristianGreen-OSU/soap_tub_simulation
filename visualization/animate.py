@@ -30,7 +30,7 @@ def animate_voxel_series(voxel_grids: List[np.ndarray], threshold=0.0, label="ru
 
     os.makedirs("gifs", exist_ok=True)
     timestamp = datetime.now().strftime("%d_%H%M")
-    filename = f"gifs/erosion_{label}_ts-{timestamp}.gif"
+    filename = f"gifs/{timestamp}_{label}.gif"
     plotter = pv.Plotter(off_screen=True)
     plotter.open_gif(filename)
 
@@ -67,7 +67,7 @@ def make_label(config) -> str:
     geo = config['soap'].get('geometry', 'cuboid')
     erosion_type = config['erosion_model']['type']
     flow = config['erosion_model'].get('flow_vector', [0, 0, -1])
-    rate = config['erosion_model'].get('erosion_rate', config['erosion_model'].get('erosion_mean', 0.1))
+    rate = config['erosion_model'].get('erosion_rate', config['erosion_model'].get('erosion_rate', 0.1))
     water_source_height = config['erosion_model'].get('water_source_height', 1.0)
 
     label = f"{erosion_type}_{geo}_v-{flow}_r-{rate}_w-{water_source_height}"

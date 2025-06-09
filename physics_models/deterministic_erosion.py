@@ -19,7 +19,7 @@ fields determine deposition or erosion deterministically.
 
 import numpy as np
 from core_geometry.voxel_model import VoxelModel
-from physics_models.vector_utils import compute_exposures
+from physics_models.vector_utils import compute_exposures, compute_center, normalize_vector
 
 class DeterministicErosionModel:
     def __init__(self, flow_vector=(0, 0, -1), erosion_rate=0.01):
@@ -38,11 +38,11 @@ class DeterministicErosionModel:
         """
         surface_voxels = voxel_model.get_exposed_surface_voxels(self.flow_vector)
 
-        # SHIFTED CENTER: push the center downward so erosion continues to favor top-facing voxels
-        center = np.array(voxel_model.size, dtype=float) / 2.0
-        center[2] = water_source_height + voxel_model.size[2]  # shift z (vertical) above the bottom of the grid
+        normalized_flow_vector = normalize_vector(self.flow_vector)
 
-        exposure = compute_exposures(surface_voxels, center, self.flow_vector)
+        center = compute_center(voxel_model, normalized_flow_vector, water_source_height)
+
+        exposure = compute_exposures(surface_voxels, center, normalized_flow_vector)
 
         erosion_values = np.array(exposure) * self.erosion_rate
 

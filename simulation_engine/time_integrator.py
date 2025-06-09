@@ -44,7 +44,7 @@ class TimeIntegrator:
             if save_snapshots:
                 self.grid_snapshots.append(deepcopy(self.vm.grid))
 
-            self.eroder.apply(self.vm, water_source_height=1.0)
+            self.eroder.apply(self.vm, water_source_height)
             mass = self.vm.get_mass()
             self.mass_history.append(mass)
 

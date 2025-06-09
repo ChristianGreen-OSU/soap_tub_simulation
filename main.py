@@ -16,6 +16,7 @@ responsible for wiring together physics modules and execution.
 import yaml
 import pprint
 import numpy as np
+import pyvista as pv
 from core_geometry.voxel_model import VoxelModel
 from physics_models.deterministic_erosion import DeterministicErosionModel
 from physics_models.stochastic_erosion import StochasticErosionModel
@@ -25,11 +26,47 @@ from visualization.animate import animate_voxel_series
 from visualization.animate import make_label
 from analysis_tools.mass_tracker import MassTracker
 from analysis_tools.erosion_map import compute_erosion_map, plot_erosion_heatmap
+from physics_models.vector_utils import compute_center, normalize_vector
 
 
 def load_config(path="parameters.yaml"):
     with open(path, 'r') as f:
         return yaml.safe_load(f)
+    
+
+def visualize_flow_debug_scene(voxel_model: VoxelModel, flow_vector, water_source_height):
+    """
+    Visualizes the flow vector, shifted erosion center, and center plane.
+    """
+    normalized_flow_vector = normalize_vector(flow_vector)
+
+    center = compute_center(voxel_model, normalized_flow_vector, water_source_height)
+
+    # Voxel positions
+    voxels = np.argwhere(voxel_model.grid > 0.0).astype(float)
+    cloud = pv.PolyData(voxels)
+
+    # PyVista setup
+    plotter = pv.Plotter()
+    plotter.add_mesh(cloud, render_points_as_spheres=True, point_size=8, color="lightblue")
+
+    # Flow vector arrow (scaled for visibility)
+    arrow = pv.Arrow(start=center, direction=normalized_flow_vector, scale=10.0, tip_length=1.0)
+    plotter.add_mesh(arrow, color="red", label="Flow Vector")
+
+    # Shifted center sphere
+    plotter.add_mesh(pv.Sphere(radius=1.0, center=center), color="orange", label="Shifted Center")
+
+    # Mid-plane for reference (XY plane at original grid center)
+    mid_plane_center = np.array(voxel_model.grid.shape) / 2.0
+    plane = pv.Plane(center=(mid_plane_center[0], mid_plane_center[1], mid_plane_center[2]),
+                     direction=(0, 0, 1),
+                     i_size=voxel_model.grid.shape[0], j_size=voxel_model.grid.shape[1])
+    plotter.add_mesh(plane, color="green", opacity=0.3, label="Original Z Center Plane")
+
+    plotter.add_legend()
+    plotter.show()
+
 
 def main():
     cfg = load_config()
@@ -42,11 +79,9 @@ def main():
     print(f" - Geometry shape: {cfg['soap'].get('geometry', 'cuboid')}")
     print(f" - Voxel resolution: {cfg['soap']['voxel_resolution']} mm/voxel")
     print(f" - Erosion model: {cfg['erosion_model']['type']}")
-    if cfg['erosion_model']['type'] == 'deterministic':
-        print(f"   • Flow vector: {cfg['erosion_model']['flow_vector']}")
-        print(f"   • Erosion rate: {cfg['erosion_model']['erosion_rate']}")
-    elif cfg['erosion_model']['type'] == 'stochastic':
-        print(f"   • Mean erosion: {cfg['erosion_model']['erosion_mean']}")
+    print(f"   • Flow vector: {cfg['erosion_model']['flow_vector']}")
+    print(f"   • Erosion rate: {cfg['erosion_model']['erosion_rate']}")
+    if cfg['erosion_model']['type'] == 'stochastic':
         print(f"   • Std dev: {cfg['erosion_model']['erosion_std']}")
         print(f"   • Fraction of surface affected: {cfg['erosion_model']['erosion_fraction']}")
         if 'seed' in cfg['erosion_model']:
@@ -69,19 +104,22 @@ def main():
         )
     elif em_cfg['type'] == 'stochastic':
         eroder = StochasticErosionModel(
-            erosion_mean=em_cfg['erosion_mean'],
+            flow_vector=em_cfg['flow_vector'],
+            erosion_mean=em_cfg['erosion_rate'],
             erosion_std=em_cfg['erosion_std'],
             erosion_fraction=em_cfg['erosion_fraction'],
             seed=em_cfg.get('seed', None)
         )
     else:
         raise ValueError("Unsupported erosion model type.")
+    
+    visualize_flow_debug_scene(vm, flow_vector=em_cfg['flow_vector'], water_source_height=em_cfg['water_source_height'])
 
     # Run simulation
     steps = cfg['simulation']['steps']
     log_int = cfg['simulation']['log_interval']
     sim = TimeIntegrator(vm, eroder, steps=steps)
-    sim.run(log_interval=log_int, save_snapshots=True, water_source_height=cfg['erosion_model']['water_source_height'])
+    sim.run(log_interval=log_int, save_snapshots=True, water_source_height=em_cfg['water_source_height'])
 
     # Analyze results
     tracker = MassTracker(sim.mass_history)

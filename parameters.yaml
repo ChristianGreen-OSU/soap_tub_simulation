@@ -10,8 +10,9 @@
 # or thermal-hydraulic solvers. It separates model logic from configuration.
 
 soap:
-  size: [15, 15, 5]         # Dimensions in voxels
-  voxel_resolution: 1.0     # mm per voxel
+  size: [50, 75, 15]         # Dimensions in voxels
+  voxel_resolution: 1.0     # mm per voxel, used in mass calculations only
+  geometry: 'ellipsoid'        # Options: cuboid, ellipsoid, cylinder, rounded_cuboid
 
 simulation:
   steps: 100
@@ -19,12 +20,11 @@ simulation:
 
 erosion_model:
   type: stochastic       # Options: deterministic, stochastic
-  flow_vector: [0, 0, -1]   # Only for deterministic
-  erosion_rate: 0.07        # mm^3 per step per exposed voxel
-  water_source_height: 1.0
+  flow_vector: [0, -1.0, 0]   # Direction of water flow
+  erosion_rate: 0.5       # mm^3 per step per exposed voxel
+  water_source_height: 30.0
 
   # For stochastic model:
-  erosion_mean: 0.07
-  erosion_std: 0.02
-  erosion_fraction: 1.0
+  erosion_std: 0.1
+  erosion_fraction: 0.95 # fraction of the surface voxels that are eroded at each timestep.
   seed: 43

@@ -60,7 +60,8 @@ class VoxelModel:
         Only those whose upstream neighbor in the flow direction is empty.
         :param flow_vector: Tuple of direction of water flow (e.g., (0, 0, -1))
         """
-        direction = np.array(flow_vector, dtype=int)
+        direction = np.round(flow_vector).astype(int)
+        # print(f"Rounded flow direction for exposure check: {direction}")
         mask = self.grid > 0.0
         exposed_voxels = []
 
