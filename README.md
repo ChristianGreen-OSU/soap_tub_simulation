@@ -73,6 +73,8 @@ soap:
 simulation:
   steps: 100
   log_interval: 10
+  heat_map: true
+  debug_vectors: true
 
 erosion_model:
   type: deterministic      # Options: deterministic, stochastic
