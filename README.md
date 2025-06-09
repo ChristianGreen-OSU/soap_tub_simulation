@@ -335,5 +335,3 @@ Different erosion rates and stochastic parameters affect erosion speed and visua
 ## Summary
 
 This project was built as a modular, physically inspired erosion simulator. It mirrors many of the data structures, simplifications, and tools found in real nuclear simulation codes. Both deterministic and stochastic modeling approaches were implemented and evaluated. The model was verified using visual debugging tools, mass loss logs, and a wide variety of flow configurations.
-
-Would you like a version of this document included as `analysis.md` inside the project repo or embedded in the final README?
