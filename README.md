@@ -190,7 +190,7 @@ Shows:
 ### 🧼 Made For Engineers Who Think in Meshes
 
 Whether you’re modeling CRUD, hydrogen pickup, or erosion in a reactor core, this project helps bridge physical intuition and computational modeling. And all with just a bar of soap.
-
+---
 .
 .
 .
