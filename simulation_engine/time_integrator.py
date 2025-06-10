@@ -55,17 +55,6 @@ class TimeIntegrator:
         if save_snapshots:
             self.grid_snapshots.append(deepcopy(self.vm.grid))
 
-    def plot_mass_history(self):
-        """
-        Plot soap mass over time.
-        """
-        plt.plot(self.mass_history)
-        plt.xlabel("Time step")
-        plt.ylabel("Soap mass")
-        plt.title("Mass Loss Over Time")
-        plt.grid(True)
-        plt.show()
-
     def get_snapshots(self):
         """
         Return the list of voxel grid snapshots (3D numpy arrays).

@@ -116,7 +116,7 @@ erosion_model:
 
 * **Voxel model** tracks soap as a 3D grid: `grid[x, y, z] ∈ [0, 1]`
 * **Flow vector** sets direction; center is projected *upstream*
-* **Surface detection** uses binary erosion to find outer shell
+* **Surface detection** uses integer-based neighbor detection to find outer shell
 * **Exposure** is computed via vector dot product: `dot(normal, flow_vector)`
 * **Erosion engine** subtracts value from each voxel over time
 * **Visualization** uses PyVista to animate voxel decay

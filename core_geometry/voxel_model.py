@@ -1,6 +1,6 @@
 """
 This module defines the voxel-based geometry representation of the soap bar.
-It will be used throughout the simulation to hold the 3D grid data structure
+It is used throughout the simulation to hold the 3D grid data structure
 representing the soap, where each voxel can represent soap presence (binary)
 or local soap density (float).
 
@@ -24,13 +24,15 @@ from typing import Tuple, List, Union
 import numpy as np
 from .shape_generator import make_cuboid, make_ellipsoid, make_cylinder, make_rounded_cuboid
 
+
 class VoxelModel:
     def __init__(self, size: Tuple[int, int, int] = (30, 30, 10), voxel_resolution: float = 1.0, geometry: str = 'cuboid') -> None:
         """
-        Initialize the voxel grid.
-        :param size: Tuple of (nx, ny, nz) dimensions.
-        :param voxel_resolution: Physical size of each voxel in mm or cm.
-        :param geometry: Form of soap bar.
+        Initialize the voxel grid representing the soap bar.
+
+        :param size: Dimensions of the voxel grid (nx, ny, nz).
+        :param voxel_resolution: Real-world size of each voxel in mm or cm.
+        :param geometry: Shape of the soap bar ('cuboid', 'ellipsoid', 'cylinder', 'rounded_cuboid').
         """
         self.size: Tuple[int, int, int] = size
         self.res: float = voxel_resolution
@@ -48,20 +50,26 @@ class VoxelModel:
 
     def get_mass(self, density: float = 1.0) -> float:
         """
-        Compute total mass of the soap bar.
-        :param density: Mass per voxel unit.
-        :return: Total mass.
+        Compute the total mass of the soap bar.
+
+        :param density: Mass per voxel unit (adjustable for different materials).
+        :return: Total mass as a float.
         """
         return float(np.sum(self.grid) * density * (self.res ** 3))
 
     def get_exposed_surface_voxels(self, flow_vector: Tuple[int, int, int]) -> np.ndarray:
         """
-        Return surface voxels exposed to the incoming flow.
-        Only those whose upstream neighbor in the flow direction is empty.
-        :param flow_vector: Tuple of direction of water flow (e.g., (0, 0, -1))
+        Return surface voxels that are directly exposed to the incoming flow.
+
+        A voxel is considered exposed if it:
+        - Contains soap (value > 0), AND
+        - Has a neighboring voxel upstream (in the opposite direction of flow) that is empty (value ≤ 0),
+          OR lies on the edge of the grid.
+
+        :param flow_vector: Direction of incoming water flow (e.g., (0, 0, -1) for top-down).
+        :return: Numpy array of index tuples (x, y, z) for exposed surface voxels.
         """
         direction = np.round(flow_vector).astype(int)
-        # print(f"Rounded flow direction for exposure check: {direction}")
         mask = self.grid > 0.0
         exposed_voxels = []
 
@@ -81,16 +89,19 @@ class VoxelModel:
                         if self.grid[tuple(neighbor)] <= 0.0:
                             exposed_voxels.append((x, y, z))
                     else:
-                        # Edge of grid = exposed to outside
+                        # Voxels on the outer boundary are considered exposed
                         exposed_voxels.append((x, y, z))
 
         return np.array(exposed_voxels)
 
     def erode_voxels(self, indices: Union[List[Tuple[int, int, int]], np.ndarray], rate: float) -> None:
         """
-        Erode a list of voxels by a given rate.
-        :param indices: List or array of voxel index tuples.
-        :param rate: Float erosion amount to subtract.
+        Reduce the density value of each voxel by a fixed rate.
+
+        If a voxel drops below a small threshold, it is considered fully eroded and set to zero.
+
+        :param indices: List or array of voxel (x, y, z) indices.
+        :param rate: Amount to subtract from each voxel's value.
         """
         for idx in indices:
             new_value = self.grid[tuple(idx)] - rate
@@ -98,23 +109,24 @@ class VoxelModel:
 
     def reset(self) -> None:
         """
-        Reset the soap bar to a full (uneaten) state.
+        Reset the entire voxel grid to a full (uneaten) state of value = 1.0.
         """
         self.grid[:] = 1.0
 
     def summary(self) -> None:
         """
-        Print summary stats: current mass, nonzero voxels, etc.
+        Print basic statistics of the current soap state, including mass and voxel count.
         """
         mass = self.get_mass()
         active_voxels = np.count_nonzero(self.grid > 0.0)
         print(f"Soap mass: {mass:.2f}, active voxels: {active_voxels}")
 
+
 # Example usage:
 if __name__ == "__main__":
     vm = VoxelModel((10, 10, 10))
     print("Initial mass:", vm.get_mass())
-    surf = vm.get_surface_voxels()
-    print(f"Surface voxels: {len(surf)}")
-    vm.erode_voxels(surf[:10], rate=0.1)
+    surface_voxels = vm.get_exposed_surface_voxels((0, 0, -1))
+    print(f"Surface voxels: {len(surface_voxels)}")
+    vm.erode_voxels(surface_voxels[:10], rate=0.1)
     print("Mass after erosion:", vm.get_mass())
