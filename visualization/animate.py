@@ -28,9 +28,9 @@ def animate_voxel_series(voxel_grids: List[np.ndarray], threshold=0.0, label="ru
     """
     
 
-    os.makedirs("gifs", exist_ok=True)
+    os.makedirs("./assets/gifs", exist_ok=True)
     timestamp = datetime.now().strftime("%d_%H%M")
-    filename = f"gifs/{timestamp}_{label}.gif"
+    filename = f"./assets/gifs/{timestamp}_{label}.gif"
     plotter = pv.Plotter(off_screen=True)
     plotter.open_gif(filename)
 

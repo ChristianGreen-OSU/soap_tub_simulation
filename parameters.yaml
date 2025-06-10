@@ -15,18 +15,18 @@ soap:
   geometry: 'cuboid'        # Options: cuboid, ellipsoid, cylinder, rounded_cuboid
 
 simulation:
-  steps: 100
+  steps: 50
   log_interval: 10
   heat_map: false
-  debug_vectors: true
+  debug_vectors: false
 
 erosion_model:
   type: stochastic       # Options: deterministic, stochastic
-  flow_vector: [1, 5, -0.2]   # Direction of water flow
-  erosion_rate: 0.9         # mm^3 per step per exposed voxel
+  flow_vector: [0, 0, -1]   # Direction of water flow
+  erosion_rate: 1.5         # mm^3 per step per exposed voxel
   water_source_height: 1.0  #really additional distance from center
 
   # For stochastic model:
   erosion_std: .1
-  erosion_fraction: 0.55 # fraction of the surface voxels that are eroded at each timestep.
+  erosion_fraction: 0.75 # fraction of the surface voxels that are eroded at each timestep.
   seed: 43
