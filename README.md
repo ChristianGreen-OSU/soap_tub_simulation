@@ -1,7 +1,7 @@
 
 ---
 
-## 🧼 Bar Soap in Shower Simulation
+# 🧼 Bar Soap in Shower Simulation
 
 **A physics-inspired erosion simulation of a soap bar under shower flow**, using voxel geometry, customizable water behavior, and PyVista visualization. Designed to reflect the deterministic and stochastic principles used in nuclear reactor modeling.
 
@@ -188,56 +188,54 @@ Shows:
 ---
 
 ### 🧼 Made For Engineers Who Think in Meshes
-
 Whether you’re modeling CRUD, hydrogen pickup, or erosion in a reactor core, this project helps bridge physical intuition and computational modeling. And all with just a bar of soap.
+
 ---
 .
-.
-.
-## Engineering Review & Analysis
+# Engineering Review & Analysis
 
-### Water Drop Modeling
+## Water Drop Modeling
 
-#### 1. How are water drops encoded?
+### 1. How are water drops encoded?
 
-##### 1.1 How is the mass and velocity of each drop defined?
+#### 1.1 How is the mass and velocity of each drop defined?
 
 Water drops are not modeled as individual particles. Instead, a vector `flow_vector` represents the direction of water flow, and a scalar `erosion_rate` (or statistical mean and standard deviation) encodes the magnitude of erosion over time.
 
-##### 1.2 Are drops modeled individually or in bulk?
+#### 1.2 Are drops modeled individually or in bulk?
 
 Drops are modeled in bulk. The simulation uses a volumetric (Eulerian-style) approach, where erosion is applied to exposed surface voxels as a field operation rather than simulating individual droplets.
 
-##### 1.3 Does the model correctly identify collisions with soap cells?
+#### 1.3 Does the model correctly identify collisions with soap cells?
 
 Yes. The `get_exposed_surface_voxels()` method checks whether each surface voxel has an upstream neighbor (in the flow direction) that is empty, indicating exposure to incoming flow. This approximates collision detection based on flow access.
 
 ---
 
-### Physical Effects of Erosion
+## Physical Effects of Erosion
 
-#### 2. What happens when a drop collides with a soap cell?
+### 2. What happens when a drop collides with a soap cell?
 
-##### 2.1 Which physical effects are modeled?
+#### 2.1 Which physical effects are modeled?
 
 Only erosion is modeled. Dissolution, evaporation, and fluid dynamics are not explicitly included. Erosion is handled in two ways:
 
 * In deterministic mode, erosion is proportional to the dot product between the flow vector and the voxel's direction from the source (i.e., directional exposure).
 * In stochastic mode, erosion amounts are drawn from a normal distribution and biased toward voxels more exposed to the flow.
 
-##### 2.2 Are these processes deterministic or stochastic?
+#### 2.2 Are these processes deterministic or stochastic?
 
 Both approaches are supported. The deterministic model resembles fixed field erosion (like coolant flow in reactor modeling), while the stochastic model reflects uncertainty and randomness (similar to Monte Carlo transport or CRUD flaking).
 
 ---
 
-### Spatial Interactions and System Limits
+## Spatial Interactions and System Limits
 
-#### 3. How do adjacent soap cells interact?
+### 3. How do adjacent soap cells interact?
 
 There is no explicit coupling between adjacent voxels. Erosion is applied locally to each voxel based on its surface exposure. However, erosion indirectly changes the geometry over time, which affects what becomes exposed, introducing an emergent spatial dynamic.
 
-#### 4. What is the final state as drops approach infinity?
+### 4. What is the final state as drops approach infinity?
 
 As the number of erosion steps increases, total soap mass approaches zero. In deterministic cases, this results in a smooth wedge-like erosion pattern just before zero. In stochastic cases, some parts may persist longer due to random selection, but the final state still trends toward full dissolution.
 
@@ -247,53 +245,53 @@ As the number of erosion steps increases, total soap mass approaches zero. In de
 
 ### Simulation Approach
 
-#### 1. How is a generic simulation task approached?
+### 1. How is a generic simulation task approached?
 
-##### 1.1 Physical to computational representation
+#### 1.1 Physical to computational representation
 
 Soap is discretized into a 3D voxel grid. Water is abstracted as a directional field. This mirrors how neutron flux, coolant flow, or power distributions are represented in nuclear reactor simulations.
 
-##### 1.2 Communication of modeling choices
+#### 1.2 Communication of modeling choices
 
 Modeling decisions are made explicit in code, comments, visualizations, and configuration files. Debugging tools help verify flow alignment and erosion behavior at each step.
 
 ---
 
-### Architecture and Implementation
+## Architecture and Implementation
 
-#### 2. What modeling architecture was chosen?
+### 2. What modeling architecture was chosen?
 
-##### 2.1 Why this architecture?
+#### 2.1 Why this architecture?
 
 The voxel grid supports both spatial discretization and geometric flexibility. The choice of a field-based erosion model (as opposed to a particle system) is aligned with how heat, stress, or CRUD models work in real simulation codes.
 
-##### 2.2 Code elegance and clarity
+#### 2.2 Code elegance and clarity
 
 Erosion logic, geometry definition, visualization, and configuration are all modular. This allows deterministic and stochastic models to reuse core components.
 
-##### 2.3 Performance tradeoffs
+#### 2.3 Performance tradeoffs
 
 Erosion logic is simple and clear but not yet vectorized for maximum speed. Voxel-level simulation scales well up to \~100×100×50, with potential for GPU optimization later.
 
 ---
 
-### Model Development and Testing
+## Model Development and Testing
 
-#### 3. What was prioritized during model construction?
+### 3. What was prioritized during model construction?
 
-##### 3.1 Critical functionality
+#### 3.1 Critical functionality
 
 Surface detection, erosion application, and mass tracking were implemented first. These are foundational for validating correctness and conservation behavior.
 
-##### 3.2 Nice-to-have features
+#### 3.2 Nice-to-have features
 
 GIF animations, interactive debugging overlays, alternate geometries, and stochastic modeling were layered in after the core erosion loop was validated.
 
 ---
 
-### Assumption Validation
+## Assumption Validation
 
-#### 4. How were assumptions validated?
+### 4. How were assumptions validated?
 
 * Debug visualizations overlay flow vectors and exposure planes on the soap model
 * Mass is logged over time to detect plateaus or anomalies
