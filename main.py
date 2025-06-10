@@ -18,7 +18,6 @@ RELAP5, or MOOSE-based applications.
 import yaml
 import pprint
 import numpy as np
-import pyvista as pv
 
 # Core simulation components
 from core_geometry.voxel_model import VoxelModel

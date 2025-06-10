@@ -133,7 +133,7 @@ Make sure you have **Python ≥ 3.8**. Then run:
 conda create -n soap_sim python=3.10
 conda activate soap_sim
 
-conda install numpy scipy matplotlib pyyaml -y
+conda install numpy matplotlib -y
 conda install -c conda-forge pyvista vtk -y
 ```
 

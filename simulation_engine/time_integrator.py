@@ -16,8 +16,6 @@ It integrates the physical model forward in time and collects diagnostics — si
 """
 
 from copy import deepcopy
-import matplotlib.pyplot as plt
-import numpy as np
 from core_geometry.voxel_model import VoxelModel
 
 class TimeIntegrator:

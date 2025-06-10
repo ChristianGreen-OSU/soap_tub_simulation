@@ -13,7 +13,6 @@ Useful for spatial sensitivity analysis and identifying erosion hotspots.
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
 import pyvista as pv
 
 def compute_erosion_map(grid_before, grid_after):
