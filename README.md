@@ -191,12 +191,6 @@ Shows:
 
 Whether you’re modeling CRUD, hydrogen pickup, or erosion in a reactor core, this project helps bridge physical intuition and computational modeling. And all with just a bar of soap.
 
----
-
-
-Here is the complete answer rewritten in clean, copy-pasteable **Markdown** format, with all first-person language corrected and formatting optimized for use in a `README.md` or similar document:
-
----
 .
 .
 .
