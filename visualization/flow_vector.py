@@ -3,7 +3,7 @@ import pyvista as pv
 from core_geometry.voxel_model import VoxelModel
 from physics_models.vector_utils import compute_center, normalize_vector
 
-def visualize_flow_debug_scene(voxel_model: VoxelModel, flow_vector, water_source_height):
+def visualize_flow_debug_scene(voxel_model: VoxelModel, flow_vector, water_source_height, plotter=None):
     """
     Visualizes the geometry and directional inputs of the simulation using PyVista.
 
@@ -19,6 +19,7 @@ def visualize_flow_debug_scene(voxel_model: VoxelModel, flow_vector, water_sourc
     - flow_vector (tuple or array): The direction from which water is assumed to arrive.
     - water_source_height (float): The scalar offset upstream (against the flow vector)
       used to define the erosion center (like a virtual water source).
+    - plotter (pv.Plotter, optional): If passed, uses the provided PyVista plotter (e.g., for offscreen rendering).
     """
     # Normalize the flow vector to ensure consistent magnitude and direction
     normalized_flow_vector = normalize_vector(flow_vector)
@@ -31,14 +32,18 @@ def visualize_flow_debug_scene(voxel_model: VoxelModel, flow_vector, water_sourc
     cloud = pv.PolyData(voxels)
 
     # Initialize the 3D plot
-    plotter = pv.Plotter()
+    should_show = False
+    if plotter is None:
+        plotter = pv.Plotter()
+        should_show = True  # Only show interactively if not passed externally
+
     plotter.add_mesh(cloud, render_points_as_spheres=True, point_size=8, color="lightblue")
 
     # Create and render an arrow representing the flow vector direction
     arrow = pv.Arrow(start=center,
                      direction=flow_vector,
-                     scale=10.0,         # Length scaling for visibility
-                     tip_length=1.0)     # Arrowhead size
+                     scale=10.0,
+                     tip_length=1.0)
     plotter.add_mesh(arrow, color="red", label="Flow Vector")
 
     # Visualize the shifted 'source' center as a small orange sphere
@@ -47,11 +52,15 @@ def visualize_flow_debug_scene(voxel_model: VoxelModel, flow_vector, water_sourc
     # Reference plane to indicate the middle of the voxel grid (XY plane at midpoint in Z)
     mid_plane_center = np.array(voxel_model.grid.shape) / 2.0
     plane = pv.Plane(center=mid_plane_center,
-                     direction=(0, 0, 1),  # Oriented in XY plane
+                     direction=(0, 0, 1),
                      i_size=voxel_model.grid.shape[0],
                      j_size=voxel_model.grid.shape[1])
     plotter.add_mesh(plane, color="green", opacity=0.3, label="Original Z Center Plane")
 
-    # Show a legend and open the interactive viewer
     plotter.add_legend()
-    plotter.show()
+
+    # Only call interactive viewer if we created the plotter
+    if should_show:
+        plotter.show()
+
+    return plotter  # Optional: allows screenshot/export outside
