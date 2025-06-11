@@ -1,13 +1,11 @@
-// See https://svelte.dev/docs/kit/types#app.d.ts
-// for information about these interfaces
-declare global {
-	namespace App {
-		// interface Error {}
-		// interface Locals {}
-		// interface PageData {}
-		// interface PageState {}
-		// interface Platform {}
-	}
-}
+// src/app.d.ts
 
-export {};
+/// <reference types="svelte" />
+
+// Declare missing svelteHTML namespace for event typings like on:load
+declare namespace svelteHTML {
+  interface HTMLAttributes<T> {
+    // for on:load, on:focus, etc.
+    [key: `on${string}`]: (event: any) => void;
+  }
+}
