@@ -135,7 +135,7 @@ conda activate soap_sim
 
 conda install numpy matplotlib -y
 conda install -c conda-forge pyvista vtk -y
-conda install flask
+conda install flask flask-cors
 ```
 
 #### ✅ 2. Run Simulation
