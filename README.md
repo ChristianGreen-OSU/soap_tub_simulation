@@ -192,8 +192,6 @@ Whether you’re modeling CRUD, hydrogen pickup, or erosion in a reactor core, t
 
 ---
 <br>
-<br>
-
 
 # 🧼 Soap Erosion Model — Mathematical Summary
 
@@ -279,8 +277,73 @@ $$
 * $\mathcal{N}$: normal distribution
 
 ---
+### 6. Determine Surface Voxels
+Surface voxels are determined by checking if a voxel containing soap is **exposed** to air or empty space in any of the six orthogonal directions.
 
-### 6. Mass Tracking & Summary Metrics
+---
+
+#### 1. Binary Mask of Soap Presence
+
+Let $G \in \mathbb{R}^{N_x \times N_y \times N_z}$ be the 3D voxel grid. First, construct a binary mask $M$:
+
+$$
+M_{i,j,k} =
+\begin{cases}
+1 & \text{if } G_{i,j,k} > 0 \\
+0 & \text{otherwise}
+\end{cases}
+$$
+
+---
+
+#### 2. Morphological Erosion (Interior Detection)
+
+Erode the binary mask using a 6-connected kernel $K$ (only axial neighbors):
+
+$$
+E = M \ominus K
+$$
+
+This gives a mask of **interior** voxels — those fully surrounded by other soap voxels.
+
+---
+
+#### 3. Surface Mask Calculation
+
+Now, subtract the interior from the full mask:
+
+$$
+S = M - E
+$$
+
+This yields a surface mask $S$, where:
+
+$$
+S_{i,j,k} = 1 \quad \text{means voxel } (i,j,k) \text{ is on the surface}
+$$
+
+---
+
+#### 4. Directionally Exposed Surface Voxels
+
+We optionally refine this based on the **flow direction** $\vec{v}_{\text{flow}}$:
+
+$$
+\text{exposed}(\vec{p}) =
+\begin{cases}
+\text{True} & \text{if } G(\vec{p}) > 0 \text{ and } G(\vec{p} + \text{round}(\vec{v}_{\text{flow}})) \leq 0 \\
+\text{True} & \text{if neighbor is out of bounds} \\
+\text{False} & \text{otherwise}
+\end{cases}
+$$
+
+This gives the set of voxels that are both on the surface and **facing into the incoming water flow**.
+
+---
+
+
+
+### 7. Mass Tracking & Summary Metrics
 
 Total soap mass at timestep $t$:
 
