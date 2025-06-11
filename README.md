@@ -191,7 +191,123 @@ Shows:
 Whether you’re modeling CRUD, hydrogen pickup, or erosion in a reactor core, this project helps bridge physical intuition and computational modeling. And all with just a bar of soap.
 
 ---
-.
+<br>
+<br>
+
+
+# 🧼 Soap Erosion Model — Mathematical Summary
+
+### 1. Geometry and Grid Representation
+
+The soap bar is discretized into a 3D voxel grid:
+
+$$
+\mathbf{G} \in \mathbb{R}^{N_x \times N_y \times N_z}
+$$
+
+Each voxel $G_{i,j,k} \in [0,1]$ represents local soap density (intactness).
+
+---
+
+### 2. Flow-Aligned Water Source (Center Reference)
+
+The shifted center point is placed upstream of the soap volume:
+
+$$
+\mathbf{c} = \frac{1}{2}
+\begin{bmatrix}
+N_x \\
+N_y \\
+N_z
+\end{bmatrix}
+- \hat{\mathbf{v}}_{\text{flow}} \cdot d_{\text{offset}}
+$$
+
+* $\hat{\mathbf{v}}_{\text{flow}}$: normalized incoming water direction
+* $d_{\text{offset}}$: scalar distance upstream from soap center
+
+---
+
+### 3. Directional Exposure (All Models)
+
+For a voxel at position $\mathbf{p}$, its surface normal is approximated as the vector from the erosion center:
+
+$$
+\hat{\mathbf{n}} = \frac{\mathbf{p} - \mathbf{c}}{\|\mathbf{p} - \mathbf{c}\|}
+$$
+
+Directional exposure to water flow is calculated as:
+
+$$
+E = \max(0, \hat{\mathbf{n}} \cdot \hat{\mathbf{v}}_{\text{flow}})
+$$
+
+This is the cosine of the angle between the voxel-facing vector and the water direction.
+
+---
+
+### 4. Deterministic Erosion Model
+
+Each exposed voxel loses mass according to:
+
+$$
+\Delta m = E \cdot r
+$$
+
+Where:
+
+* $r$: erosion rate per timestep (user-defined constant)
+
+---
+
+### 5. Stochastic Erosion Model
+
+A fraction $f$ of exposed voxels is selected, biased by exposure:
+
+$$
+k = \lfloor N \cdot f \rfloor, \quad p_i = \frac{E_i}{\sum_j E_j}
+$$
+
+Each selected voxel is eroded by a random amount:
+
+$$
+\Delta m_i = E_i \cdot \max(0, \mathcal{N}(\mu, \sigma^2))
+$$
+
+* $\mu$: mean erosion
+* $\sigma$: erosion variability (standard deviation)
+* $\mathcal{N}$: normal distribution
+
+---
+
+### 6. Mass Tracking & Summary Metrics
+
+Total soap mass at timestep $t$:
+
+$$
+M_t = \sum_{i,j,k} G_{i,j,k}
+$$
+
+Useful diagnostics:
+
+* **Total mass lost**:
+
+  $$
+  M_0 - M_T
+  $$
+
+* **Average erosion rate**:
+
+  $$
+  \frac{M_0 - M_T}{T}
+  $$
+
+* **Half-mass time** (first timestep where $M_t \leq \frac{M_0}{2}$)
+
+---
+
+<br>
+
 # Engineering Review & Analysis
 
 ## Water Drop Modeling
