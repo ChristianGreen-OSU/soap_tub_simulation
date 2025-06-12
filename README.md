@@ -130,17 +130,34 @@ erosion_model:
 Make sure you have **Python ≥ 3.8**. Then run:
 
 ```bash
-conda create -n soap_sim python=3.10
-conda activate soap_sim
+conda create -n soap_env python=3.10
+conda activate soap_env
 
 conda install numpy matplotlib -y
 conda install -c conda-forge pyvista vtk -y
+conda install flask flask-cors
+conda install imageio
+```
+or
+```bash
+python -m venv soap_env
+.\soap_env\Scripts\activate  # Windows
+pip install -r requirements.txt
 ```
 
 #### ✅ 2. Run Simulation
 
 ```bash
 python main.py
+```
+For Svelte Web UI:
+```bash
+python flask_app.py
+```
+```bash
+cd ui
+npm install
+npm run dev
 ```
 
 It will:
